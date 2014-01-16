@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>sophia - an embeddable key-value database designed for a high load | documentation</title>
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<link rel="stylesheet" href="hl.css">
+	<link rel="shortcut icon" href="favicon.ico" />
+	<script src="hl.js"></script>
+	<script>
+		hljs.initHighlightingOnLoad();
+	</script>
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-44049120-1']);
+		_gaq.push(['_trackPageview']);
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+</head>
+<body>
+
+<div id="header">
+	<br>
+	<a href="index.html"><img src="logo.png" width="270px" height="130px"></img></a>
+	<br><br><br>
+	<p><a href="get.html">GET</a>
+	<a href="documentation.html">DOCUMENTATION</a> 
+	<a href="architecture.html">ARCHITECTURE</a>
+	<a href="benchmarks.html">BENCHMARKS</a>
+</div>
+
+<div id="layout">
+	<div id="main">
+		<table cellspacing="0" cellpadding="0">
+			<td id="api" valign="top">
+				<p><a href="sp_env.html">sp_env</a><br>
+				<a href="sp_ctl.html">sp_ctl</a><br>
+				<a href="sp_open.html">sp_open</a><br>
+				<a href="sp_error.html">sp_error</a><br>
+				<a href="sp_destroy.html">sp_destroy</a>
+				<a href="sp_begin.html">sp_begin</a>
+				<a href="sp_commit.html">sp_commit</a>
+				<a href="sp_rollback.html">sp_rollback</a>
+				<a href="sp_set.html">sp_set</a><br>
+				<a href="sp_get.html">sp_get</a><br>
+				<a href="sp_delete.html">sp_delete</a>
+				<a href="sp_cursor.html">sp_cursor</a><br>
+				<a href="sp_fetch.html">sp_fetch</a><br>
+				<a href="sp_key.html">sp_key</a><br>
+				<a href="sp_keysize.html">sp_keysize</a><br>
+				<a href="sp_value.html">sp_value</a><br>
+				<a href="sp_valuesize.html">sp_valuesize</a>
+			</td>
+
+			<td id="context" valign=top>
+
+<pre id="man">
+<b>NAME</b>
+	<b>sp_ctl</b> - configurate a database
+
+<b>SYNOPSIS</b>
+	#include &lt;sophia.h&gt;
+
+	<b>int</b> sp_ctl(<b>void</b> *env, <b>spopt</b> opt, ...);
+
+<b>DESCRIPTION</b>
+	The sp_ctl(3) function set's database environment parameter opt with some
+	specific value:
+
+	Possible options are:
+	<b>SPDIR</b>
+		usage: <b>uint32_t</b> flags, <b>char</b> *path
+
+		Sets database directory path and it's open flags to use by sp_open().
+		Possible flags are:
+		<b>SPO_RDWR</b>  - open repository in read-write mode (default)
+		<b>SPO_RDONLY</b> - open repository in read-only mode
+		<b>SPO_CREAT</b>  - create repository if it is not exists.
+
+		example:
+		void *env = sp_env();
+		sp_ctl(env, SPDIR, SPO_CREAT|SPO_RDWR, "./db");
+
+	<b>SPCMP</b>
+		<b>typedef int</b> (*spcmpf)(<b>char</b> *a, <b>size_t</b> asz, <b>char</b> *b,
+		                      <b>size_t</b> bsz, <b>void</b> *arg);
+
+		usage: <b>spcmpf</b> f, <b>void</b> *arg
+
+		Sets database comparator function to use by database for a
+		key order determination.
+
+		The function must return:
+		<b>0</b>  - if keys are equal
+		<b>-1</b> - if key a is lower
+		<b>1</b>  - if key b is greater
+
+		example:
+		int cmp(char *a, size_t asz, char *b, size_t bsz, void *arg) {
+			uint32_t av = *(uint32_t*)a;
+			uint32_t bv = *(uint32_t*)b;
+			if (av == bv)
+				return 0;
+			return (av &gt; bv) ? 1 : -1;
+		}
+		void *env = sp_env();
+		sp_ctl(env, SPCMP, cmp, NULL);
+
+	<b>SPALLOC</b>
+		<b>typedef</b> <b>void</b> *(*spallocf)(<b>void</b> *ptr, <b>size_t</b> size, <b>void</b> *arg);
+
+		usage: <b>spallocf</b> f, <b>void</b> *arg
+
+		Sets database allocator function to use instead of standart
+		malloc allocator. A allocator function will be use by all internal
+		allocations, except sp_env() call.
+
+		example:
+		void *alloc_func(void *ptr, size_t size, void *arg) {
+			/* allocate memory here */
+		}
+		void *env = sp_env();
+		sp_ctl(env, SPALLOC, alloc_func, NULL);
+
+	<b>SPPAGE</b>
+		usage: <b>uint32_t</b> count
+
+		Sets database max key count in a single page.
+		This option can be tweaked for performance.
+
+		example:
+		void *env = sp_env();
+		sp_ctl(env, SPPAGE, 1024);
+
+	<b>SPGC</b>
+		usage: <b>int</b> enabled
+
+		Sets flag that garbage collector should be turn on.
+
+		example:
+		void *env = sp_env();
+		sp_ctl(env, SPGC, 1);
+
+	<b>SPGCF</b>
+		usage: <b>double</b> factor
+
+		Sets database garbage collector factor value, which
+		is used to determine whether it is time to start gc.
+
+		For example: factor of 0.5 means that all 'alive' pages from any
+		db file will be copied to new db, when there are half or less
+		of them is left.
+
+		This option can be tweaked for performance.
+
+		example:
+		void *env = sp_env();
+		sp_ctl(env, SPGCF, 0.5);
+
+	<b>SPGROW</b>
+		usage: <b>uint32_t</b> new_size, <b>double</b> resize
+
+		Sets new database files initial new size and
+		resize factor. This values are used while database extend during merge.
+		
+		This option can be tweaked for performance.
+		
+		example:
+		void *env = sp_env();
+		sp_ctl(env, SPGROW, 16 * 1024 * 1024, 2.0);
+
+	<b>SPMERGE</b>
+		usage: <b>int</b> enabled
+
+		Sets flag that merger thread must be created during sp_open().
+
+		example:
+		void *env = sp_env();
+		sp_ctl(env, SPMERGE, 1);
+
+	<b>SPMERGEWM</b>
+		usage: <b>uint32_t</b> wm
+
+		Sets database merge watermark value.
+
+		When database update count reaches this value, it notifies 
+		merger thread to create a new epoch and start merge
+		process of in-memory keys.
+		
+		This option can be tweaked for performance.
+
+		example:
+		void *env = sp_env();
+		sp_ctl(env, SPMERGEWM, 200000);
+
+<b>RETURN VALUE</b>
+	On success, sp_ctl(3) functions returns 0;
+	On error, it returns -1.
+
+<b>SEE ALSO</b>
+	sp_env(3), sp_open(3)
+</pre>
+			</td>
+		</table>
+	</div>
+
+</div>
+
+<div id="bottom">
+	<p><a href="contact.html">Dmitry Simonenko</a></p>
+</div>
+
+</body>
+</html>

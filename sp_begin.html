@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>sophia - an embeddable key-value database designed for a high load | documentation</title>
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<link rel="stylesheet" href="hl.css">
+	<link rel="shortcut icon" href="favicon.ico" />
+	<script src="hl.js"></script>
+	<script>
+		hljs.initHighlightingOnLoad();
+	</script>
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-44049120-1']);
+		_gaq.push(['_trackPageview']);
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+</head>
+<body>
+
+<div id="header">
+	<br>
+	<a href="index.html"><img src="logo.png" width="270px" height="130px"></img></a>
+	<br><br><br>
+	<p><a href="get.html">GET</a>
+	<a href="documentation.html">DOCUMENTATION</a> 
+	<a href="architecture.html">ARCHITECTURE</a>
+	<a href="benchmarks.html">BENCHMARKS</a>
+</div>
+
+<div id="layout">
+	<div id="main">
+		<table cellspacing="0" cellpadding="0">
+			<td id="api" valign="top">
+				<p><a href="sp_env.html">sp_env</a><br>
+				<a href="sp_ctl.html">sp_ctl</a><br>
+				<a href="sp_open.html">sp_open</a><br>
+				<a href="sp_error.html">sp_error</a><br>
+				<a href="sp_destroy.html">sp_destroy</a>
+				<a href="sp_begin.html">sp_begin</a>
+				<a href="sp_commit.html">sp_commit</a>
+				<a href="sp_rollback.html">sp_rollback</a>
+				<a href="sp_set.html">sp_set</a><br>
+				<a href="sp_get.html">sp_get</a><br>
+				<a href="sp_delete.html">sp_delete</a>
+				<a href="sp_cursor.html">sp_cursor</a><br>
+				<a href="sp_fetch.html">sp_fetch</a><br>
+				<a href="sp_key.html">sp_key</a><br>
+				<a href="sp_keysize.html">sp_keysize</a><br>
+				<a href="sp_value.html">sp_value</a><br>
+				<a href="sp_valuesize.html">sp_valuesize</a>
+			</td>
+
+			<td id="context" valign=top>
+
+<pre id="man">
+<b>NAME</b>
+	<b>sp_begin</b> - begin a transaction
+
+<b>SYNOPSIS</b>
+	#include &lt;sophia.h&gt;
+
+	<b>int</b> sp_begin(<b>void</b> *db);
+
+<b>DESCRIPTION</b>
+	The sp_begin(3) function is used to start a multi-statement transaction.
+
+	During transaction, all updates are not written to the database files
+	until a sp_commit(3) is called. All updates made during transaction are
+	available through sp_get(3) or by using cursor.
+
+	No nested transactions are supported.
+
+<b>EXAMPLE</b>
+<pre><code>	int rc = sp_begin(db);
+	if (rc == -1) {
+		printf("error: %s\n", sp_error(env));
+	}
+	int key = 123;
+	rc = sp_set(db, &key, sizeof(key), &key, sizeof(key));
+	if (rc == -1) {
+		printf("error: %s\n", sp_error(env));
+	}
+	rc = sp_commit(db);
+	if (rc == -1) {
+		printf("error: %s\n", sp_error(env));
+	}
+</code></pre>
+<b>RETURN VALUE</b>
+	On success, it returns 0.
+	On if transaction is active, it returns 1.
+	On error, it returns -1. See sp_error(3) for details.
+
+<b>SEE ALSO</b>
+	sp_env(3), sp_open(3), sp_error(3), sp_commit(3), sp_rollback(3)
+</pre>
+			</td>
+		</table>
+	</div>
+
+</div>
+
+<div id="bottom">
+	<p><a href="contact.html">Dmitry Simonenko</a></p>
+</div>
+
+</body>
+</html>

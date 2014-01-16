@@ -1,0 +1,106 @@
+
+@font-face {
+	font-family: 'Inconsolata';
+	font-style: normal;
+	font-weight: 400;
+	src: local('Inconsolata'), url(font.woff) format('woff');
+}
+
+body {
+	overflow-y: scroll;
+}
+
+div#layout {
+	background: #fafafa;
+	padding: 10px;
+	width: 730px;
+	margin-top: 10px;
+	margin-bottom: 0px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+div#header {
+	margin-left: auto;
+	margin-right: auto;
+	padding: 0px;
+	padding-top: 0px;
+	padding-bottom: 5px;
+	margin: 0px;
+	margin-bottom: 15px;
+	font-family: arial, sans-serif;
+	color: #505050;
+	font-size: 55%;
+	text-align: center;
+	letter-spacing: 2px;
+	word-spacing: 7px
+}
+
+div#main {
+	margin-top: 0px;
+	margin-bottom: 0px;
+	padding-top: 10px;
+	padding-bottom: 10px;
+	padding-right: 10px;
+	padding-left: 10px;
+	font-family: 'Inconsolata', sans-serif;
+	color: #505050;
+	font-weight: 100;
+	font-size: 90%;
+	text-align: justify;
+	line-height: 28px;
+}
+
+div#bottom {
+	margin: 0px;
+	margin-top: 30px;
+	margin-bottom: 30px;
+	margin-left: auto;
+	margin-right: auto;
+	font-family: arial, sans-serif;
+	font-size: 65%;
+	text-align: center;
+	letter-spacing: 2px;
+}
+
+#hl {
+}
+
+#topic {
+	font-size: 85%;
+	letter-spacing: 2px;
+	font-weight: 900;
+	color: #505050;
+}
+
+a:link {
+	color: #000000;
+	text-decoration: none;
+}
+
+#api {
+	width: 100px;
+	margin: 0px;
+	padding: 0px;
+	font-family: 'Inconsolata';
+	font-weight: 300;
+	color: #909090;
+	font-size: 90%;
+	text-align: left;
+	line-height: 22px;
+}
+
+#context {
+	margin: 0px;
+	padding: 0px;
+	margin-left: 90px;
+}
+
+#man {
+	font-family: 'Inconsolata';
+	color: #505050;
+	font-weight: 300;
+	font-size: 90%;
+	text-align: justify;
+	line-height: 22px;
+}
