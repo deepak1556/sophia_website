@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>sophia - an embeddable key-value database designed for a high load | documentation</title>
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<link rel="stylesheet" href="hl.css">
+	<link rel="shortcut icon" href="favicon.ico" />
+	<script src="hl.js"></script>
+	<script>
+		hljs.tabReplace = '    ';
+		hljs.initHighlightingOnLoad();
+	</script>
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push(['_setAccount', 'UA-44049120-1']);
+		_gaq.push(['_trackPageview']);
+		(function() {
+			var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+</head>
+<body>
+
+<div id="header">
+	<br>
+	<a href="index.html"><img src="logo.png" width="270px" height="130px"></img></a>
+	<br><br><br>
+	<p><a href="get.html">GET</a>
+	<a href="documentation.html">DOCUMENTATION</a> 
+	<a href="architecture.html">ARCHITECTURE</a>
+	<a href="benchmarks.html">BENCHMARKS</a>
+</div>
+
+<div id="layout">
+	<div id="main">
+		<table cellspacing="0" cellpadding="0">
+			<td id="api" valign="top">
+				<p><a href="sp_env.html">sp_env</a><br>
+				<a href="sp_ctl.html">sp_ctl</a><br>
+				<a href="sp_open.html">sp_open</a><br>
+				<a href="sp_error.html">sp_error</a><br>
+				<a href="sp_destroy.html">sp_destroy</a><br>
+				<a href="sp_begin.html">sp_begin</a>
+				<a href="sp_commit.html">sp_commit</a>
+				<a href="sp_rollback.html">sp_rollback</a>
+				<a href="sp_set.html">sp_set</a><br>
+				<a href="sp_get.html">sp_get</a><br>
+				<a href="sp_delete.html">sp_delete</a>
+				<a href="sp_cursor.html">sp_cursor</a><br>
+				<a href="sp_fetch.html">sp_fetch</a><br>
+				<a href="sp_key.html">sp_key</a><br>
+				<a href="sp_keysize.html">sp_keysize</a><br>
+				<a href="sp_value.html">sp_value</a><br>
+				<a href="sp_valuesize.html">sp_valuesize</a>
+			</td>
+
+			<td id="context" valign=top>
+
+				<p><font id="topic">PREFACE</font></p>
+
+				<p>Sophia is an embeddable, transactional key-value database.
+
+				<p>It is written entirely in C and can be used in C/C++ applications or
+				by any interpreted language if the appropriate library bindings
+				are available.
+
+				<p>Sophia supports the traditional set/get/delete operations semantic plus
+				range queries by using cursors. Database API has been designed to be as clean
+				as possible and easy to use.
+
+				<p>All sophia API declarations are stored in a separate include file: <b>sophia.h</b>
+
+				<p>And the library to link with is <b>-lsophia</b> accordingly.
+				<br>
+
+				<p><font id="topic">CONVENTIONS</font></p>
+
+				<p>All functions return either 0 on success, or -1 on error. The only exception
+				is functions that return a pointer. In that case NULL indicates an error.
+
+				<p>Any error description can be accessed through <font id="hl"><a href="sp_error.html">sp_error(3)</a></font> function.
+
+				<!--
+				Exception is <font id="hl"><a href="sp_env.html">sp_env(3)</a></font> function, error on which indicates out-of-memory
+				condition.
+				-->
+
+				<p>All created objects must be freed by <font id="hl"><a href="sp_destroy.html">sp_destroy(3)</a></font> function.
+				The only exception is the <font id="hl"><a href="sp_get.html">sp_get(3)</a></font> function, which allocates the returned value via
+				malloc(3) (and should be freed using free(3) accordingly) or using
+				the allocator-free function specified in <font id="hl"><a href="sp_ctl.html">sp_ctl(3)</a></font>.
+				<br>
+
+				<p><font id="topic">DATABASE</font></p>
+
+				<p>To open or create a database the <font id="hl"><a href="sp_open.html">sp_open(3)</a></font> function must be used
+				with a configuration object (environment) previously created using
+				<font id="hl"><a href="sp_env.html">sp_env(3)</a></font>. The sp_env(3) function must be intialized using
+				<font id="hl"><a href="sp_ctl.html">sp_ctl(3)</a></font>.
+				Before opening, a database directory must be specified by <b>SPDIR</b>.
+
+<pre><code>#include &lt;sophia.h&gt;
+void *env = sp_env();
+if (env == NULL) {
+	/* memory allocation error */
+}
+int rc = sp_ctl(env, SPDIR, SPO_CREAT|SPO_RDWR, "./db");
+if (rc == -1) {
+	/* memory allocation error */
+	printf("error: %s\n", sp_error(env));
+	sp_destroy(env);
+}
+</code></pre>
+
+				<p>To create a database directory the <b>SPO_CREAT</b> flag must be passed to
+				the <font id="hl"><a href="sp_ctl.html">sp_ctl(SPDIR)</a></font> function.
+
+				<p>The <font id="hl"><a href="sp_open.html">sp_open(3)</a></font> function allocates
+				a database handle and does the main job of creating a new or recovering an existing database.
+
+<pre><code>void *db = sp_open(env);
+if (db == NULL) {
+	printf("error: %s\n", sp_error(env));
+	sp_destroy(env);
+}
+</code></pre>
+
+			<p><font id="topic">OPERATIONS</font></p>
+
+			<p>There are a number of operations available to write or read data.
+			All functions accept first arguments as key and key size.
+
+			<p>To insert a new key-value pair use <font id="hl"><a href="sp_set.html">sp_set(3)</a></font>.
+
+<pre><code>char value[] = "hello world";
+int key = 0;
+while (key < 10) {
+	rc = sp_set(db, &key, sizeof(key), value, sizeof(value));
+	if (rc == -1) {
+		printf("sp_set: %s\n", sp_error(db));
+		break;
+	}
+	key++;
+}
+</code></pre>
+
+			<p>To get a key use <font id="hl"><a href="sp_get.html">sp_get(3)</a></font>.
+
+			<p>sp_get(3) allocates a value, which should be freed afterwards using
+			the free(3) function (or by allocator specific function passed to
+			<font id="hl"><a href="sp_ctl.html">sp_ctl(SPALLOC)</a></font>.
+
+<pre><code>int key = 0;
+while (key < 10) {
+	void *value;
+	size_t valuesize;
+	int rc = sp_get(s, &key, sizeof(key), &value, &valuesize);
+	if (rc == -1) {
+		printf("sp_get: %s\n", sp_error(db));
+		break;
+	}
+	printf("key: %d, value: %s\n", key, value);
+	free(value);
+	key++;
+}
+</code></pre>
+
+			<p>Please note that it is much faster to use range queries for
+			sequential key reads.
+
+			<p>To delete a key use <font id="hl"><a href="sp_delete.html">sp_delete(3)</a></font>.
+
+<pre><code>int key = 0;
+while (key < 10) {
+	rc = sp_delete(s, &key, sizeof(key));
+	if (rc == -1) {
+		printf("sp_delete: %s\n", sp_error(db));
+		break;
+	}
+	key++;
+}
+</code></pre>
+
+			<p><font id="topic">TRANSACTIONS</font></p>
+
+			<p>Sophia supports a light-weight multi-statement transactions.
+
+			<p>The <font id="hl"><a href="sp_begin.html">sp_begin(3)</a></font> function is used to start a
+			transaction.
+
+			<p>During transaction, all updates are not written to the database files
+			until a <font id="hl"><a href="sp_commit.html">sp_commit(3)</a></font> is called.
+			On commit, all modifications made are written to the log file in a single batch.
+
+			<p>To discard any changes made during transaction operation, 
+			<font id="hl"><a href="sp_rollback.html">sp_rollback(3)</a></font> function should be used.
+
+			<p>No nested transactions are supported.
+
+			<p><font id="topic">RANGE QUERIES</font></p>
+
+			<p>It is possible to do range queries using cursors.
+
+			<p>To create a cursor the <font id="hl"><a href="sp_cursor.html">sp_cursor(3)</a></font> function
+			should be used. Cursor creation function allows to specify a query order and a start key.
+			
+			<p>Possible orders are:
+
+			<ul>
+			<li><b>SPGTE</b> - increasing order, including supplied key
+			<li><b>SPGT</b>  - increasing order, excluding supplied key
+			<li><b>SPLTE</b> - decreasing order, including supplied key
+			<li><b>SPLT</b>  - decreasing order, excluding supplied key
+			</ul>
+
+			<p>If no key is specified whole key range will be traversed.
+
+<pre><code>void *c = sp_cursor(db, SPGTE, NULL, 0);
+if (c == NULL) {
+	printf("cursor failed: %s\n", sp_error(db));
+	/* error */
+}
+</code></pre>
+
+			<p>To do a single step of iteration <font id="hl"><a href="sp_fetch.html">sp_fetch(3)</a></font>
+			function should be used. It returns 1 if there is more data available and 0 otherwise:
+
+<pre><code>while (sp_fetch(c)) {
+	char *k = sp_key(c);
+	char *v = sp_value(c);
+	printf("key: %d, value: %s\n", *(int*)k, v);
+}
+</code></pre>
+
+			<p>To get current key or value data, <font id="hl"><a href="sp_key.html">sp_key(3)</a></font>,
+			<font id="hl"><a href="sp_keysize.html">sp_keysize(3)</a></font> and
+			<font id="hl"><a href="sp_value.html">sp_value(3)</a></font>,
+			<font id="hl"><a href="sp_valuesize.html">sp_valuesize(3)</a></font> functions should be used
+			accordingly.
+
+			<p>Cursor objects should be freed using the <font id="hl"><a href="sp_destroy.html">sp_destroy(3)</a></font>
+			function after a usage.
+			<br>
+
+			<p><font id="topic">EXAMPLE</font></p>
+
+<pre><code>#include &lt;sophia.h&gt;
+int main(void)
+{
+	/* create environment handle */
+	void *env = sp_env();
+	if (env == NULL)
+		return 0;
+	/* set database directory with it's open flags */
+	int rc = sp_ctl(env, SPDIR, SPO_CREAT|SPO_RDWR, "./db");
+	if (rc == -1) {
+		sp_destroy(env);
+		return 0;
+	}
+	/* open a existing or create the new database */
+	void *db = sp_open(env);
+	if (db == NULL) {
+		printf("error: %s\n", sp_error(env));
+		sp_destroy(env);
+		return 0;
+	}
+	/* sequentially insert key-value pairs */
+	char value[] = "hello world";
+	int key = 0;
+	while (key &lt; 10) {
+		rc = sp_set(s, &key, sizeof(key), value, sizeof(value));
+		if (rc == -1) {
+			printf("sp_set: %s\n", sp_error(db));
+			goto err;
+		}
+		key++;
+	}
+	/* sequentially get key values.
+	 *
+	 * By default, order is defined by memcmp(3) function in
+	 * standart comparator. It is possible to specify custom comparator
+	 * in sp_ctl(SPCMP).
+	 */
+	key = 0;
+	while (key &lt; 10) {
+		void *v;
+		size_t vsize;
+		rc = sp_get(s, &key, sizeof(key), &v, &vsize);
+		if (rc == -1) {
+			printf("sp_get: %s\n", sp_error(db));
+			goto err;
+		}
+		printf("key: %d, value: %s\n", i, v);
+		free(v);
+		key++;
+	}
+err:
+	sp_destroy(db);
+	sp_destroy(env);
+	return 0;
+}
+</code></pre>
+			</td>
+		</table>
+	</div>
+</div>
+
+<div id="bottom">
+	<p><a href="contact.html">Dmitry Simonenko</a></p>
+</div>
+
+</body>
+</html>
